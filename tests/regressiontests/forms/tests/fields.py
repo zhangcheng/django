@@ -628,9 +628,7 @@ class FieldsTests(TestCase):
     def test_urlfield_10(self):
         # UTF-8 in the domain.
         f = URLField(verify_exists=True)
-        import ipdb; ipdb.set_trace()
         url = u'http://\u03b5\u03bb\u03bb\u03b7\u03bd\u03b9\u03ba\u03ac.idn.icann.org/\u0391\u03c1\u03c7\u03b9\u03ba\u03ae_\u03c3\u03b5\u03bb\u03af\u03b4\u03b1'
-        f.clean(url)
         self.assertEqual(url, f.clean(url)) #This will fail without internet.
 
     # BooleanField ################################################################
