@@ -186,6 +186,10 @@ class RegexURLResolver(object):
         self._reverse_dict = None
         self._namespace_dict = None
         self._app_dict = None
+        # set of dotted paths to all functions and classes that are used in
+        # urlpatterns
+        self._callback_strs = set()
+        self._populated = False
 
     def __repr__(self):
         return '<%s %s (%s:%s) %s>' % (self.__class__.__name__, self.urlconf_name, self.app_name, self.namespace, self.regex.pattern)
@@ -195,6 +199,15 @@ class RegexURLResolver(object):
         namespaces = {}
         apps = {}
         for pattern in reversed(self.url_patterns):
+            if hasattr(pattern, '_callback_str'):
+                self._callback_strs.add(pattern._callback_str)
+            elif hasattr(pattern, '_callback'):
+                callback = pattern._callback
+                if not hasattr(callback, '__name__'):
+                    lookup_str = callback.__module__ + "." + callback.__class__.__name__
+                else:
+                    lookup_str = callback.__module__ + "." + callback.__name__
+                self._callback_strs.add(lookup_str)
             p_pattern = pattern.regex.pattern
             if p_pattern.startswith('^'):
                 p_pattern = p_pattern[1:]
@@ -215,6 +228,7 @@ class RegexURLResolver(object):
                         namespaces[namespace] = (p_pattern + prefix, sub_pattern)
                     for app_name, namespace_list in pattern.app_dict.items():
                         apps.setdefault(app_name, []).extend(namespace_list)
+                    self._callback_strs.update(pattern._callback_strs)
             else:
                 bits = normalize(p_pattern)
                 lookups.appendlist(pattern.callback, (bits, p_pattern))
@@ -223,6 +237,7 @@ class RegexURLResolver(object):
         self._reverse_dict = lookups
         self._namespace_dict = namespaces
         self._app_dict = apps
+        self._populated = True
 
     def _get_reverse_dict(self):
         if self._reverse_dict is None:
@@ -305,8 +320,13 @@ class RegexURLResolver(object):
     def reverse(self, lookup_view, *args, **kwargs):
         if args and kwargs:
             raise ValueError("Don't mix *args and **kwargs in call to reverse()!")
+
+        if not self._populated:
+            self._populate()
+
         try:
-            lookup_view = get_callable(lookup_view, True)
+            if lookup_view in self._callback_strs:
+                lookup_view = get_callable(lookup_view, True)
         except (ImportError, AttributeError), e:
             raise NoReverseMatch("Error importing '%s': %s." % (lookup_view, e))
         possibilities = self.reverse_dict.getlist(lookup_view)
