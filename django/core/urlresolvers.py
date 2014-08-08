@@ -7,6 +7,7 @@ a string) and returns a tuple in this format:
     (view_function, function_args, function_kwargs)
 """
 
+import functools
 import re
 from threading import local
 
@@ -203,6 +204,9 @@ class RegexURLResolver(object):
                 self._callback_strs.add(pattern._callback_str)
             elif hasattr(pattern, '_callback'):
                 callback = pattern._callback
+		if isinstance(callback, functools.partial):
+		    callback = callback.func
+
                 if not hasattr(callback, '__name__'):
                     lookup_str = callback.__module__ + "." + callback.__class__.__name__
                 else:

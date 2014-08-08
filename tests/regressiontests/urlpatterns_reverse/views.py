@@ -1,3 +1,5 @@
+from functools import partial, update_wrapper
+
 from django.http import HttpResponse
 
 def empty_view(request, *args, **kwargs):
@@ -8,6 +10,14 @@ def kwargs_view(request, arg1=1, arg2=2):
 
 def absolute_kwargs_view(request, arg1=1, arg2=2):
     return HttpResponse('')
+
+empty_view_partial = partial(empty_view, template_name="template.html")
+
+
+empty_view_wrapped = update_wrapper(
+    partial(empty_view, template_name="template.html"), empty_view,
+)
+
 
 def nested_view(request):
     pass
