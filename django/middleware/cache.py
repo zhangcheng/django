@@ -98,10 +98,10 @@ class UpdateCacheMiddleware(object):
         if not response.status_code == 200:
             return response
 
-	# Don't cache responses that set a user-specific (and maybe security
-	# sensitive) cookie in response to a cookie-less request.
-	if not request.COOKIES and response.cookies and has_vary_header(response, 'Cookie'):
-	    return response
+        # Don't cache responses that set a user-specific (and maybe security
+        # sensitive) cookie in response to a cookie-less request.
+        if not request.COOKIES and response.cookies and has_vary_header(response, 'Cookie'):
+            return response
 
         # Try to get the timeout from the "max-age" section of the "Cache-
         # Control" header before reverting to using the default cache_timeout

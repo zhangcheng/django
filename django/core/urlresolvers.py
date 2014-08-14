@@ -204,8 +204,8 @@ class RegexURLResolver(object):
                 self._callback_strs.add(pattern._callback_str)
             elif hasattr(pattern, '_callback'):
                 callback = pattern._callback
-		if isinstance(callback, functools.partial):
-		    callback = callback.func
+                if isinstance(callback, functools.partial):
+                    callback = callback.func
 
                 if not hasattr(callback, '__name__'):
                     lookup_str = callback.__module__ + "." + callback.__class__.__name__
