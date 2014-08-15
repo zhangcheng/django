@@ -823,10 +823,10 @@ class FilePathField(Field):
         Field.__init__(self, verbose_name, name, **kwargs)
 
     def get_prep_value(self, value):
-	value = super(FilePathField, self).get_prep_value(value)
-	if value is None:
-	    return None
-	return smart_unicode(value)
+        value = super(FilePathField, self).get_prep_value(value)
+        if value is None:
+            return None
+        return smart_unicode(value)
 
     def formfield(self, **kwargs):
         defaults = {
@@ -924,10 +924,10 @@ class IPAddressField(Field):
         Field.__init__(self, *args, **kwargs)
 
     def get_prep_value(self, value):
-	value = super(IPAddressField, self).get_prep_value(value)
-	if value is None:
-	    return None
-	return smart_unicode(value)
+        value = super(IPAddressField, self).get_prep_value(value)
+        if value is None:
+            return None
+        return smart_unicode(value)
 
     def get_internal_type(self):
         return "IPAddressField"

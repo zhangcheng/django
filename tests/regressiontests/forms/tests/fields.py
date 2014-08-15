@@ -30,6 +30,7 @@ import re
 import os
 import urllib2
 from decimal import Decimal
+from functools import wraps
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.forms import *
@@ -47,6 +48,30 @@ def fix_os_paths(x):
     else:
         return x
 
+def verify_exists_urls(existing_urls=()):
+    """
+    Patches urllib to simulate the availability of some urls even when there
+    is no Internet connection. This hack should be removed alongside with
+    `URLField.verify_exists` in Django 1.5.
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            from django.core import validators
+            # patch urllib2.OpenerDirector
+            original_open = validators.urllib2.OpenerDirector.open
+            def custom_open(self, req, data=None, timeout=None):
+                if req.get_full_url() in existing_urls:
+                    return True
+                raise Exception()
+            try:
+                urllib2.OpenerDirector.open = custom_open
+                func(*args, **kwargs)
+            finally:
+                # unpatch urllib2.OpenerDirector
+                validators.urllib2.OpenerDirector.open = original_open
+        return wrapper
+    return decorator
 
 class FieldsTests(TestCase):
 
@@ -625,6 +650,7 @@ class FieldsTests(TestCase):
         except ValidationError, e:
             self.assertEqual("[u'This URL appears to be a broken link.']", str(e))
 
+    @verify_exists_urls((u'http://xn--hxargifdar.idn.icann.org/%CE%91%CF%81%CF%87%CE%B9%CE%BA%CE%AE_%CF%83%CE%B5%CE%BB%CE%AF%CE%B4%CE%B1',))
     def test_urlfield_10(self):
         # UTF-8 in the domain.
         f = URLField(verify_exists=True)

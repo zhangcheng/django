@@ -67,7 +67,7 @@ class BaseModelValidationTests(ValidationTestCase):
         self.assertEqual(None, mtv.full_clean()) # This will fail if there's no Internet connection
 
     def test_correct_https_url_but_nonexisting(self):
-        mtv = ModelToValidate(number=10, name='Some Name', url_verify='https://www.example.com/')
+        mtv = ModelToValidate(number=10, name='Some Name', url_verify='https://www.notexisttest.com/')
         self.assertFieldFailsValidationWithMessage(mtv.full_clean, 'url_verify', [u'This URL appears to be a broken link.'])
 
     def test_text_greater_that_charfields_max_length_raises_erros(self):
