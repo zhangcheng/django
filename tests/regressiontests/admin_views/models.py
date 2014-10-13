@@ -774,6 +774,26 @@ class ChildOfReferer(ParentWithFK):
 class M2MReference(models.Model):
     ref = models.ManyToManyField('self')
 
+# Models for #23431
+class ReferencedByInline(models.Model):
+    pass
+
+
+class InlineReference(models.Model):
+    fk = models.ForeignKey(ReferencedByInline, related_name='hidden+')
+
+
+class InlineReferer(models.Model):
+    refs = models.ManyToManyField(InlineReference)
+
+class InlineReferenceInline(admin.TabularInline):
+    model = InlineReference
+
+
+class InlineRefererAdmin(admin.ModelAdmin):
+    inlines = [InlineReferenceInline]
+
+
 admin.site.register(Article, ArticleAdmin)
 admin.site.register(CustomArticle, CustomArticleAdmin)
 admin.site.register(Section, save_as=True, inlines=[ArticleInline])
@@ -819,6 +839,8 @@ admin.site.register(OtherStory, OtherStoryAdmin)
 admin.site.register(ReferencedByParent)
 admin.site.register(ChildOfReferer)
 admin.site.register(M2MReference)
+admin.site.register(ReferencedByInline)
+admin.site.register(InlineReferer, InlineRefererAdmin)
 
 # We intentionally register Promo and ChapterXtra1 but not Chapter nor ChapterXtra2.
 # That way we cover all four cases:
