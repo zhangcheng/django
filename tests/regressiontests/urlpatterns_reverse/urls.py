@@ -63,6 +63,9 @@ urlpatterns = patterns('',
     
     url('^includes/', include(other_patterns)),
 
+    # Security tests
+    url('(.+)/security/$', empty_view, name='security'),
+
 )
 
 
