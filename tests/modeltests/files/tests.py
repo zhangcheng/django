@@ -10,6 +10,8 @@ from models import Storage, temp_storage, temp_storage_location
 if sys.version_info >= (2, 5):
     from tests_25 import FileObjTests
 
+FILE_SUFFIX_REGEX = '[A-Za-z0-9]{7}'
+
 
 class FileTests(TestCase):
     def tearDown(self):
@@ -55,27 +57,28 @@ class FileTests(TestCase):
         # Save another file with the same name.
         obj2 = Storage()
         obj2.normal.save("django_test.txt", ContentFile("more content"))
-        self.assertEqual(obj2.normal.name, "tests/django_test_1.txt")
+	obj2_name = obj2.normal.name
+	self.assertRegexpMatches(obj2_name, "tests/django_test_%s.txt" % FILE_SUFFIX_REGEX)
         self.assertEqual(obj2.normal.size, 12)
 
         # Push the objects into the cache to make sure they pickle properly
         cache.set("obj1", obj1)
         cache.set("obj2", obj2)
-        self.assertEqual(cache.get("obj2").normal.name, "tests/django_test_1.txt")
+	self.assertRegexpMatches(cache.get("obj2").normal.name, "tests/django_test_%s.txt" % FILE_SUFFIX_REGEX)
 
         # Deleting an object does not delete the file it uses.
         obj2.delete()
         obj2.normal.save("django_test.txt", ContentFile("more content"))
-        self.assertEqual(obj2.normal.name, "tests/django_test_2.txt")
+	self.assertNotEqual(obj2_name, obj2.normal.name)
+	self.assertRegexpMatches(obj2.normal.name, "tests/django_test_%s.txt" % FILE_SUFFIX_REGEX)
 
         # Multiple files with the same name get _N appended to them.
-        objs = [Storage() for i in range(3)]
+	objs = [Storage() for i in range(2)]
         for o in objs:
             o.normal.save("multiple_files.txt", ContentFile("Same Content"))
-        self.assertEqual(
-            [o.normal.name for o in objs],
-            ["tests/multiple_files.txt", "tests/multiple_files_1.txt", "tests/multiple_files_2.txt"]
-        )
+	names = [o.normal.name for o in objs]
+	self.assertEqual(names[0], "tests/multiple_files.txt")
+	self.assertRegexpMatches(names[1], "tests/multiple_files_%s.txt" % FILE_SUFFIX_REGEX)
         for o in objs:
             o.delete()
 

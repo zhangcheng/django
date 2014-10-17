@@ -758,6 +758,42 @@ class OtherStoryAdmin(admin.ModelAdmin):
     list_display_links = ('title', 'id') # 'id' in list_display_links
     list_editable = ('content', )
 
+# Models for #23329
+class ReferencedByParent(models.Model):
+    pass
+
+
+class ParentWithFK(models.Model):
+    fk = models.ForeignKey(ReferencedByParent)
+
+
+class ChildOfReferer(ParentWithFK):
+    pass
+
+
+class M2MReference(models.Model):
+    ref = models.ManyToManyField('self')
+
+# Models for #23431
+class ReferencedByInline(models.Model):
+    pass
+
+
+class InlineReference(models.Model):
+    fk = models.ForeignKey(ReferencedByInline, related_name='hidden+')
+
+
+class InlineReferer(models.Model):
+    refs = models.ManyToManyField(InlineReference)
+
+class InlineReferenceInline(admin.TabularInline):
+    model = InlineReference
+
+
+class InlineRefererAdmin(admin.ModelAdmin):
+    inlines = [InlineReferenceInline]
+
+
 admin.site.register(Article, ArticleAdmin)
 admin.site.register(CustomArticle, CustomArticleAdmin)
 admin.site.register(Section, save_as=True, inlines=[ArticleInline])
@@ -800,6 +836,11 @@ admin.site.register(Paper, PaperAdmin)
 admin.site.register(CoverLetter, CoverLetterAdmin)
 admin.site.register(Story, StoryAdmin)
 admin.site.register(OtherStory, OtherStoryAdmin)
+admin.site.register(ReferencedByParent)
+admin.site.register(ChildOfReferer)
+admin.site.register(M2MReference)
+admin.site.register(ReferencedByInline)
+admin.site.register(InlineReferer, InlineRefererAdmin)
 
 # We intentionally register Promo and ChapterXtra1 but not Chapter nor ChapterXtra2.
 # That way we cover all four cases:
